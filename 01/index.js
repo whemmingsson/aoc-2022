@@ -11,9 +11,10 @@ for (let e of rows) {
   currentElf += parseInt(e);
 }
 
-// Part 1
-console.log(Math.max(...elfs));
+console.log("Part 1 ", Math.max(...elfs));
 
-// Part 2
 elfs.sort((a, b) => b - a);
-console.log(elfs.slice(0, 3).reduce((p, c) => p + c, 0));
+console.log(
+  "Part 2 ",
+  elfs.slice(0, 3).reduce((p, c) => p + c, 0)
+);
