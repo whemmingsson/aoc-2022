@@ -7,8 +7,7 @@ const instructions = rows.slice(rows.indexOf("") + 1);
 const stacks = [];
 for (let cfg of config) {
   const s = new Stack();
-  let crates = cfg.split("");
-  for (let c of crates) {
+  for (let c of cfg.split("")) {
     s.push(c);
   }
   stacks.push(s);
@@ -19,23 +18,19 @@ for (let ins of instructions) {
     .split(" ")
     .map((i) => parseInt(i))
     .filter((i) => !isNaN(i));
-  console.log(parts);
-  const count = parts[0];
-  const from = parts[1];
-  const to = parts[2];
 
-  const sFrom = stacks[from - 1];
-  const sTo = stacks[to - 1];
+  const sFrom = stacks[parts[1] - 1];
+  const sTo = stacks[parts[2] - 1];
 
   // Part 1
-  /*for (let i = 0; i < count; i++) {
+  /*for (let i = 0; i < parts[0]; i++) {
     let c = sFrom.pop();
     sTo.push(c);
   } */
 
   // Part 2
   let cratesToMove = [];
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < parts[0]; i++) {
     cratesToMove.push(sFrom.pop());
   }
   cratesToMove.reverse();
