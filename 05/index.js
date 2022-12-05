@@ -27,8 +27,19 @@ for (let ins of instructions) {
   const sFrom = stacks[from - 1];
   const sTo = stacks[to - 1];
 
-  for (let i = 0; i < count; i++) {
+  // Part 1
+  /*for (let i = 0; i < count; i++) {
     let c = sFrom.pop();
+    sTo.push(c);
+  } */
+
+  // Part 2
+  let cratesToMove = [];
+  for (let i = 0; i < count; i++) {
+    cratesToMove.push(sFrom.pop());
+  }
+  cratesToMove.reverse();
+  for (let c of cratesToMove) {
     sTo.push(c);
   }
 }
