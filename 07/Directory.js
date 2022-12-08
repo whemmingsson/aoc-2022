@@ -22,7 +22,6 @@ module.exports = class Directory {
 
   addFile(name, size) {
     if (this.hasFileWithName(name)) return;
-
     this.addSize(size);
     this.files.push(new File(name, size, this));
   }
@@ -43,8 +42,7 @@ module.exports = class Directory {
       return this.addSubDir(name);
     }
 
-    const idx = this.directories.findIndex((d) => d.name === name);
-    return this.directories[idx];
+    return this.directories[this.directories.findIndex((d) => d.name === name)];
   }
 
   getDirs() {

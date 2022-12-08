@@ -11,32 +11,17 @@ for (let i = 0; i < rows.length; i++) {
     continue;
   }
 
-  // Command
   if (cmdOrOutput[0] === "$") {
-    // List input
-    if (cmdOrOutput.indexOf("ls") >= 0) {
-      console.log("ls");
-    }
     // Go back up one step
-    else if (cmdOrOutput.indexOf("..") >= 0) {
-      console.log("move up");
+    if (cmdOrOutput.indexOf("..") >= 0) {
       currentDir = currentDir.parentDir;
     }
     // Should be change directory eg '$ cd e'
-    else {
-      console.log("move down");
-      const p = cmdOrOutput.split(" ");
-      console.log(p);
-
-      currentDir = currentDir.getOrAddSubDir(p[2]);
+    else if (cmdOrOutput.indexOf("ls") === -1) {
+      currentDir = currentDir.getOrAddSubDir(cmdOrOutput.split(" ")[2]);
     }
-  }
-  // Output
-  else {
-    console.log("output of operation: ", cmdOrOutput);
-    if (cmdOrOutput.indexOf("dir") === 0) {
-      // NOOP?
-    } else {
+  } else {
+    if (cmdOrOutput.indexOf("dir") !== 0) {
       const a = cmdOrOutput.split(" ");
       const fileSize = parseInt(a[0]);
       const name = a[1];
@@ -48,26 +33,18 @@ for (let i = 0; i < rows.length; i++) {
 let flatList = [];
 
 flatList.push(...root.getDirs());
-
-/*flatList.forEach((d) => {
-  console.log(d.name, d.size);
-}); */
-
 const sum = flatList
   .map((d) => d.size)
   .filter((s) => s < 100000)
   .reduce((a, b) => a + b, 0);
 
-//console.log(sum);
+console.log("Part 1:", sum);
 
 // PART 2
 const TOTAL_SIZE = 70000000;
 const REQ_FREE_SPACE = 30000000;
-
 let currentFreeSpace = TOTAL_SIZE - flatList[0].size;
 let requiredSpaceToFree = REQ_FREE_SPACE - currentFreeSpace;
-
-console.log(requiredSpaceToFree);
-
 const candidates = flatList.filter((d) => d.size >= requiredSpaceToFree).map((d) => d.size);
-console.log(Math.min(...candidates));
+
+console.log("Part 2:", Math.min(...candidates));
