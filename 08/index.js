@@ -36,7 +36,7 @@ const isVisible = (rIdx, cIdx) => {
   return false;
 };
 
-const calcScore = (trees, tree) => {
+const getViewingDistance = (trees, tree) => {
   let score = 0;
   for (let i = 0; i < trees.length; i++) {
     if (trees[i] < tree) score++;
@@ -59,7 +59,7 @@ const getScenicScore = (rIdx, cIdx) => {
   rowLeft.reverse();
   columnTop.reverse();
 
-  return calcScore(rowRight, tree) * calcScore(rowLeft, tree) * calcScore(columnTop, tree) * calcScore(columnBottom, tree);
+  return getViewingDistance(rowRight, tree) * getViewingDistance(rowLeft, tree) * getViewingDistance(columnTop, tree) * getViewingDistance(columnBottom, tree);
 };
 
 let numVisible = 0;
