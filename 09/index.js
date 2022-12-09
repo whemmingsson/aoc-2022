@@ -1,4 +1,4 @@
-const rows = require("../util/loader.js").getStrings("data");
+const rows = require("../util/loader.js").getStrings("example");
 console.log(rows.length);
 
 class Knot {
@@ -15,28 +15,24 @@ class Knot {
 
 // Store values as x,y -> true
 const visited = {};
-const SQRT_OF_TWO = Math.sqrt(2);
+const knots = [];
 
-const head = new Knot();
-const tail = new Knot();
-const middle = new Knot();
+for (let i = 0; i < 2; i++) {
+  knots.push(new Knot());
+}
 
-const knots = [head, tail];
-
-updatePrev = () => {
-  for (let i = 0; i < knots.length - 1; i++) {
-    knots[i].advance();
-  }
-};
+console.log(knots.length);
 
 const followLogic = () => {
   for (let i = 0; i < knots.length - 1; i++) {
     const h = knots[i];
     const t = knots[i + 1];
-    if (shouldFollow(h, t)) {
-      follow(h, t);
-    }
+    let v = getVector(h.current, t.current);
+    console.log(v);
+    follow(t, v);
   }
+
+  console.log(" ");
 
   visit(knots[knots.length - 1].current.x, knots[knots.length - 1].current.y);
 };
@@ -46,49 +42,53 @@ const visit = (x, y) => {
   if (!visited[p]) visited[p] = true;
 };
 
-const follow = (head, tail) => {
-  tail.current.x = head.prev.x;
-  tail.current.y = head.prev.y;
+const follow = (t, v) => {
+  t.current.x += v.x;
+  t.current.y += v.y;
 };
 
-const distance = (a, b) => {
-  const xDiff = Math.abs(a.current.x - b.current.x);
-  const yDiff = Math.abs(a.current.y - b.current.y);
-  return Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff, 2));
-};
+const getVector = (h, t) => {
+  console.log("HEAD, TAIL", h, t);
+  if (h.x === t.x && h.y === t.y) {
+    return { x: 0, y: 0 };
+  }
 
-const shouldFollow = (head, tail) => {
-  return distance(head, tail) > SQRT_OF_TWO;
+  if (h.x === t.x) {
+    return { x: 0, y: h.y - t.y };
+  }
+
+  if (h.y === t.y) {
+    return { x: h.x - t.x, y: 0 };
+  }
+
+  console.log("Diagonal");
+  return { x: h.x - t.x, y: h.y - t.y };
 };
 
 const moveRight = (steps) => {
   for (let i = 0; i < steps; i++) {
-    updatePrev();
-    head.current.x += 1;
+    knots[0].current.x += 1;
     followLogic();
   }
 };
 
 const moveLeft = (steps) => {
   for (let i = 0; i < steps; i++) {
-    updatePrev();
-    head.current.x -= 1;
+    knots[0].current.x -= 1;
     followLogic();
   }
 };
 
 const moveUp = (steps) => {
   for (let i = 0; i < steps; i++) {
-    updatePrev();
-    head.current.y -= 1;
+    knots[0].current.y -= 1;
     followLogic();
   }
 };
 
 const moveDown = (steps) => {
   for (let i = 0; i < steps; i++) {
-    updatePrev();
-    head.current.y += 1;
+    knots[0].current.y += 1;
     followLogic();
   }
 };
@@ -109,4 +109,6 @@ for (let instruction of rows) {
 }
 
 //console.log(visited);
+console.log(visited);
+console.log(knots[knots.length - 1]);
 console.log("Part 1: ", Object.entries(visited).length);
