@@ -1,32 +1,18 @@
 
-const rows = require("../util/loader.js").getStrings("example_2").map(r => r.trim());
+const rows = require("../util/loader.js").getStrings("data").map(r => r.trim());
 const DEBUG = false;
 let register = 1;
 
 const memory = {};
-/* memory contains mappings between cycleId and operation value of register
-   example: 3 -> [-1] interpret as: at cycle 3 , decrease register by -1
-*/
 
 const addToMemory = (resolveAt, value) => {
-    /*if (memory[resolveAt]) {
-        // We already have an operation resolving at this cycle
-        // ASSUME (probably will change in p 2) that we can just manipulate this instruction value
-        debug(`     updating memory instruction for cycle ${resolveAt} with value ${value}`);
-        memory[resolveAt] += value;
-    }
-    else { */
-    // First time we see an instruction to resolve at this cycle
-    //debug(`     setting memory instruction for cycle ${resolveAt} to value ${value}`);
     memory[resolveAt] = value;
-    //}
 }
 
 const resolveAt = (cycle) => {
-    if (!memory[cycle]) return; // Nothing to resolve
-    console.log("Increasing register by:", memory[cycle]);
+    if (memory[cycle] === undefined) return; // Nothing to resolve
+    debug("Increasing register by:", memory[cycle]);
     register += memory[cycle]; // Increase / decrease value of register
-    delete memory[cycle]; // Clear up this cycles instructions
 }
 
 isEmpty = (obj) => {
@@ -37,47 +23,78 @@ const debug = (str, ...params) => {
     if (DEBUG) {
         console.log(str, ...params);
     }
-
 }
 
-let rowNr = 0;
 let cycle = 1;
 
 const SIGNAL_START_AT = 20;
 const SIGNAL_INTERVAL = 40;
 
+const getLastCycleFromMemory = () => {
+    const keys = Object.keys(memory).map(m => parseInt(m));
+    if (!keys.length) return 0;
+
+    return Math.max(...keys);
+}
+
+for (let i = 0; i < rows.length; i++) {
+    let row = rows[i];
+    const parts = row.split(" ");
+    if (parts[0] === "noop") {
+        const lastCycleEnd = getLastCycleFromMemory();
+        addToMemory(lastCycleEnd + 1, 0);
+    }
+    else {
+        const value = parseInt(parts[1]);
+        const lastCycleEnd = getLastCycleFromMemory();
+        addToMemory(lastCycleEnd + 2, value);
+    }
+}
+
+console.log(memory);
+
+drawCRT = () => {
+    for (let i = 0; i < CRT_HEIGHT; i++) {
+        console.log(CRT_flat.slice(i * CRT_WIDTH, i * CRT_WIDTH + CRT_WIDTH).join(""));
+    }
+}
+
+const CRT_WIDTH = 40;
+const CRT_HEIGHT = 6;
+const CRT_flat = [];
+
+drawCRT();
+
+const drawPixel = (cycle) => {
+    let crtCycle = (cycle - 1) % CRT_WIDTH;
+    if (register - 1 === crtCycle || register === crtCycle || register + 1 === crtCycle) {
+        CRT_flat.push("#");
+    }
+    else {
+        CRT_flat.push(".");
+    }
+}
+
+let signalSum = 0;
 do {
 
-    debug("Cycle start: ", cycle);
-    console.log("Cycle: " + cycle + "  Register:", register);
-    console.log(memory);
-
-    if (rowNr < rows.length) {
-        //console.log(rows[rowNr]);
-        const parts = rows[rowNr].split(" ");
-        if (parts[0] === "noop") {
-        }
-        else {
-            const value = parseInt(parts[1]);
-            //debug("   Found ADDX value: ", value);
-            addToMemory(cycle + 2, value);
-        }
-    }
-
+    console.log("Cycle: " + cycle);
 
     if (cycle === SIGNAL_START_AT) {
-        console.log("Signal: (cycle*register)", cycle, register, cycle * register);
+        signalSum += cycle * register;
+    }
+    else if ((cycle - SIGNAL_START_AT) % SIGNAL_INTERVAL === 0) {
+        signalSum += cycle * register;
     }
 
-    debug("cycle ends");
-
-    debug("\n");
-
+    drawPixel(cycle);
     resolveAt(cycle);
-
-    rowNr++;
+    debug("cycle ends");
+    debug("\n");
     cycle++;
 
-} while (rowNr < rows.length || !isEmpty(memory))
+} while (cycle <= getLastCycleFromMemory())
 
-console.log(register);
+console.log("Part 1:", signalSum);
+console.log("Part 2");
+drawCRT();
