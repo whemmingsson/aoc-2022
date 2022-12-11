@@ -1,15 +1,11 @@
 module.exports = class Monkey {
-    constructor(id, items, op, test, divisor) {
+    constructor(id, items, op, test) {
         this.id = id;
         this.items = items;
         this.operation = op;
         this.test = test;
         this.inspectionCount = 0;
-        this.divisor = divisor;
-    }
-
-    _convertToBigInts() {
-
+        this.divisorProduct = 1;
     }
 
     logItems() {
@@ -28,7 +24,8 @@ module.exports = class Monkey {
         //console.log("Level increased to", this.items[idx]);
 
         // Drops worry level
-        this._part1WorryManagement();
+        //this._part1WorryManagement();
+        this._part2WorryManagement(idx);
 
         //console.log("Level is divided by 3 to", this.items[idx]);
 
@@ -45,8 +42,7 @@ module.exports = class Monkey {
     }
 
     _part2WorryManagement(idx) {
-        this.items[idx] /= 3;
-        this.items[idx] = Math.floor(this.items[idx]);
+        this.items[idx] = this.items[idx] % this.divisorProduct;
     }
 
     removeItem(idx) {

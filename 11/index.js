@@ -25,6 +25,7 @@ const parseOp = (op) => {
     throw "Unexpected operation";
 }
 
+let divisorProduct = 1;
 const setupMonkey = (idx, rowStart) => {
     const items = rows[rowStart].split("Starting items: ")[1].split(", ").map(i => parseInt(i));
     const op = parseOp(rows[rowStart + 1].split("Operation: ")[1]);
@@ -35,7 +36,10 @@ const setupMonkey = (idx, rowStart) => {
 
     const test = (v) => v % divisor === 0 ? onTrue : onFalse;
 
-    let m = new Monkey(idx, items, op, test, divisore);
+    let m = new Monkey(idx, items, op, test);
+
+    divisorProduct *= divisor;
+
     monkies.push(m);
 }
 
@@ -50,9 +54,13 @@ for (let i = 0; i < rows.length; i++) {
     }
 }
 
+monkies.forEach(m => {
+    m.divisorProduct = divisorProduct;
+});
+
 console.log(monkies);
 
-const NUM_ROUNDS = 20;
+const NUM_ROUNDS = 10000;
 
 const logAllItems = () => {
     monkies.forEach(m => m.logItems());
