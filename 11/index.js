@@ -1,4 +1,4 @@
-const rows = require("../util/loader.js").getStrings("example").map(r => r.trim());
+const rows = require("../util/loader.js").getStrings("data").map(r => r.trim());
 const Monkey = require("./monkey");
 
 const DEBUG = false;
