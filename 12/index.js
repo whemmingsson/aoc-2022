@@ -14,7 +14,6 @@ class Node {
     this.isStart = height === "S";
     this.isEnd = height === "E";
     this.neighbors = [];
-    this.visited = false;
     this.parent = null;
   }
 
@@ -114,19 +113,19 @@ for (let i = 0; i < rows.length; i++) {
   }
 }
 
-const root = getStartNode();
 const target = getEndNode();
 
-const BFS = () => {
+const BFS = (root) => {
+  const visited = {};
   const q = new Q();
-  root.visited = true;
+  visited[root.id()] = true;
   q.enq(root);
   while (q.size() > 0) {
     let v = q.deq();
     if (v.id() === target.id()) return v;
     v.neighbors.forEach((w) => {
-      if (!w.visited) {
-        w.visited = true;
+      if (!visited[w.id()]) {
+        visited[w.id()] = true;
         w.parent = v;
         q.enq(w);
       }
@@ -134,7 +133,7 @@ const BFS = () => {
   }
 };
 
-BFS();
+BFS(getStartNode());
 
 let parent = getEndNode().parent;
 let c = 0;
@@ -143,4 +142,44 @@ while (parent !== null) {
   c++;
 }
 
+// Clear parents
+for (let i = 0; i < rows.length; i++) {
+  for (let j = 0; j < rows[i].length; j++) {
+    map[i][j].parent = null;
+  }
+}
+
 console.log("Part 1:", c);
+
+// Part 2
+const hikeLengths = [];
+for (let i = 0; i < rows.length; i++) {
+  for (let j = 0; j < rows[i].length; j++) {
+    let node = map[i][j];
+
+    if (node._heightAsChar() !== "a") {
+      continue;
+    }
+
+    BFS(node);
+
+    let parent = target.parent;
+    let c = 0;
+    while (parent !== null) {
+      parent = parent.parent;
+      c++;
+    }
+
+    // Clear parents
+    for (let i = 0; i < rows.length; i++) {
+      for (let j = 0; j < rows[i].length; j++) {
+        map[i][j].parent = null;
+      }
+    }
+
+    console.log("Inspecting (i,j):", i, j, node._heightAsChar(), c);
+    if (c > 0) hikeLengths.push(c);
+  }
+}
+
+console.log("Part 2: ", Math.min(...hikeLengths));
