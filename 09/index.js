@@ -1,5 +1,4 @@
-const rows = require("../util/loader.js").getStrings("example");
-console.log(rows.length);
+const rows = require("../util/loader.js").getStrings("data");
 
 class Knot {
   constructor() {
@@ -17,23 +16,17 @@ class Knot {
 const visited = {};
 const knots = [];
 
-for (let i = 0; i < 2; i++) {
+for (let i = 0; i < 10; i++) {
   knots.push(new Knot());
 }
-
-console.log(knots.length);
 
 const followLogic = () => {
   for (let i = 0; i < knots.length - 1; i++) {
     const h = knots[i];
     const t = knots[i + 1];
     let v = getVector(h.current, t.current);
-    console.log(v);
     follow(t, v);
   }
-
-  console.log(" ");
-
   visit(knots[knots.length - 1].current.x, knots[knots.length - 1].current.y);
 };
 
@@ -47,22 +40,34 @@ const follow = (t, v) => {
   t.current.y += v.y;
 };
 
+const getManhattanDistance = (a, b) => {
+  return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+}
+
 const getVector = (h, t) => {
-  console.log("HEAD, TAIL", h, t);
+  const distance = getManhattanDistance(h, t);
+
   if (h.x === t.x && h.y === t.y) {
     return { x: 0, y: 0 };
   }
 
-  if (h.x === t.x) {
-    return { x: 0, y: h.y - t.y };
+  if (h.x === t.x && distance === 2) {
+    const down = h.y - t.y > 0 ? 1 : -1
+    return { x: 0, y: down };
   }
 
-  if (h.y === t.y) {
-    return { x: h.x - t.x, y: 0 };
+  if (h.y === t.y && distance === 2) {
+    const right = h.x - t.x > 0 ? 1 : -1
+    return { x: right, y: 0 };
   }
 
-  console.log("Diagonal");
-  return { x: h.x - t.x, y: h.y - t.y };
+  if (distance >= 3) {
+    const right = h.x - t.x > 0 ? 1 : -1
+    const down = h.y - t.y > 0 ? 1 : -1
+    return { x: right, y: down };
+  }
+
+  return { x: 0, y: 0 };
 };
 
 const moveRight = (steps) => {
@@ -104,11 +109,7 @@ for (let instruction of rows) {
   const parts = instruction.split(" ");
   const direction = parts[0];
   const steps = parseInt(parts[1]);
-  //console.log(direction, steps, map[direction].name);
   map[direction](steps);
 }
 
-//console.log(visited);
-console.log(visited);
-console.log(knots[knots.length - 1]);
-console.log("Part 1: ", Object.entries(visited).length);
+console.log("Part 1/2: ", Object.entries(visited).length);
