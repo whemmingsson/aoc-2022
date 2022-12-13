@@ -10,7 +10,6 @@ class Node {
     this.x = x;
     this.y = y;
     this.height = getHeight(height).charCodeAt(0);
-    this.options = []; // "U", "D", "L", "R"
     this.isStart = height === "S";
     this.isEnd = height === "E";
     this.neighbors = [];
@@ -21,28 +20,16 @@ class Node {
     return this.x + "_" + this.y;
   }
 
-  setupOptions() {
-    if (map[this.y] && map[this.y][this.x + 1] && map[this.y][this.x + 1].height <= this.height + 1) {
-      this.neighbors.push(map[this.y][this.x + 1]);
-    }
-    if (map[this.y] && map[this.y][this.x - 1] && map[this.y][this.x - 1].height <= this.height + 1) {
-      this.neighbors.push(map[this.y][this.x - 1]);
-    }
-    if (map[this.y - 1] && map[this.y - 1][this.x] && map[this.y - 1][this.x].height <= this.height + 1) {
-      this.neighbors.push(map[this.y - 1][this.x]);
-    }
-    if (map[this.y + 1] && map[this.y + 1][this.x] && map[this.y + 1][this.x].height <= this.height + 1) {
-      this.neighbors.push(map[this.y + 1][this.x]);
-    }
+  setupNeighbors(vectors) {
+    vectors.forEach((v) => {
+      if (map[this.y + v.y] && map[this.y + v.y][this.x + v.x] && map[this.y + v.y][this.x + v.x].height <= this.height + 1) {
+        this.neighbors.push(map[this.y + v.y][this.x + v.x]);
+      }
+    });
   }
 
   _heightAsChar() {
     return String.fromCharCode(this.height);
-  }
-
-  print() {
-    console.log(`x=${this.x}, y=${this.y}, h=${this._heightAsChar()}`);
-    console.log("neighbors: ", this.neighbors.map((n) => n._heightAsChar()).join(","));
   }
 }
 
@@ -63,10 +50,6 @@ class Q {
     delete this.items[this.front];
     this.front++;
     return item;
-  }
-
-  peek() {
-    return this.items[this.front];
   }
 
   size() {
@@ -92,29 +75,25 @@ const getEndNode = () => {
   return null;
 };
 
-// Setup map
-let map = [];
-for (let i = 0; i < rows.length; i++) {
-  const r = rows[i];
-
-  const mapRow = [];
-  for (let j = 0; j < r.length; j++) {
-    const height = r[j];
-    const n = new Node(j, i, height);
-    mapRow.push(n);
+const clearParents = () => {
+  for (let i = 0; i < rows.length; i++) {
+    for (let j = 0; j < rows[i].length; j++) {
+      map[i][j].parent = null;
+    }
   }
-  map.push(mapRow);
-}
+};
 
-// Setup options
-for (let i = 0; i < rows.length; i++) {
-  for (let j = 0; j < rows[i].length; j++) {
-    map[i][j].setupOptions();
+const getPathLength = () => {
+  let parent = target.parent;
+  let c = 0;
+  while (parent !== null) {
+    parent = parent.parent;
+    c++;
   }
-}
+  return c;
+};
 
-const target = getEndNode();
-
+// BFS algorithm
 const BFS = (root) => {
   const visited = {};
   const q = new Q();
@@ -133,22 +112,33 @@ const BFS = (root) => {
   }
 };
 
-BFS(getStartNode());
-
-let parent = getEndNode().parent;
-let c = 0;
-while (parent !== null) {
-  parent = parent.parent;
-  c++;
+// Setup map
+const map = [];
+for (let i = 0; i < rows.length; i++) {
+  const mapRow = [];
+  for (let j = 0; j < rows[i].length; j++) {
+    mapRow.push(new Node(j, i, rows[i][j]));
+  }
+  map.push(mapRow);
 }
 
-// Clear parents
+// Setup options
+const vectors = [
+  { x: 0, y: 1 },
+  { x: 0, y: -1 },
+  { x: 1, y: 0 },
+  { x: -1, y: 0 },
+];
 for (let i = 0; i < rows.length; i++) {
   for (let j = 0; j < rows[i].length; j++) {
-    map[i][j].parent = null;
+    map[i][j].setupNeighbors(vectors);
   }
 }
 
+const target = getEndNode();
+BFS(getStartNode());
+let c = getPathLength();
+clearParents();
 console.log("Part 1:", c);
 
 // Part 2
@@ -162,24 +152,10 @@ for (let i = 0; i < rows.length; i++) {
     }
 
     BFS(node);
-
-    let parent = target.parent;
-    let c = 0;
-    while (parent !== null) {
-      parent = parent.parent;
-      c++;
-    }
-
-    // Clear parents
-    for (let i = 0; i < rows.length; i++) {
-      for (let j = 0; j < rows[i].length; j++) {
-        map[i][j].parent = null;
-      }
-    }
-
-    console.log("Inspecting (i,j):", i, j, node._heightAsChar(), c);
+    const c = getPathLength();
+    clearParents();
     if (c > 0) hikeLengths.push(c);
   }
 }
 
-console.log("Part 2: ", Math.min(...hikeLengths));
+console.log("Part 2:", Math.min(...hikeLengths));
