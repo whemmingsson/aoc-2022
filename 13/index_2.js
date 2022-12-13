@@ -1,12 +1,19 @@
 const rows = require("../util/loader.js").getStrings("data").map(r => r.trim());
 const DEBUG = false;
 const parseFn = JSON.parse;
-const packets = [];
+const packetPairs = [];
+let packets = [];
 for (let i = 0; i < rows.length - 1; i++) {
     if (rows[i] === "" || rows[i + 1] === "") {
         continue;
     }
-    packets.push({ left: parseFn(rows[i]), right: parseFn(rows[i + 1]) });
+
+    const l = parseFn(rows[i]);
+    const r = parseFn(rows[i + 1]);
+
+    packetPairs.push({ left: l, right: r });
+    packets.push(l);
+    packets.push(r);
 }
 
 const log = (str, ...params) => {
@@ -90,17 +97,24 @@ const areInOrder = (l, r, tab) => {
 }
 
 let indicies = [];
-packets.forEach((pp, idx) => {
+packetPairs.forEach((pp, idx) => {
     const left = pp.left;
     const right = pp.right;
     const inOrder = areInOrder(left, right, "   ");
-    console.log("Pair ", (idx + 1), inOrder ? " are in order" : " are NOT in order");
+    //console.log("Pair ", (idx + 1), inOrder ? " are in order" : " are NOT in order");
     if (inOrder) {
         indicies.push(idx + 1);
     }
 });
 
-console.log(indicies);
+//console.log(indicies);
 console.log("Part 1:", indicies.reduce((a, b) => a + b, 0))
 
+// Part 2
+packets.push(parseFn("[[2]]"));
+packets.push(parseFn("[[6]]"));
+packets = packets.sort((a, b) => areInOrder(a, b) ? -1 : 1);
+let idxOfDividerPackage2 = packets.indexOf(packets.find(p => isList(p) && p.length === 1 && isList(p[0]) && p[0].length === 1 && p[0][0] === 2));
+let idxOfDividerPackage6 = packets.indexOf(packets.find(p => isList(p) && p.length === 1 && isList(p[0]) && p[0].length === 1 && p[0][0] === 6));
+console.log("Part 2: ", (idxOfDividerPackage2 + 1) * (idxOfDividerPackage6 + 1));
 
