@@ -1,4 +1,4 @@
-const rows = require("../util/loader.js").getStrings("example");
+const rows = require("../util/loader.js").getStrings("data");
 
 class Packet {
   constructor(rawData) {
@@ -35,7 +35,7 @@ class Packet {
   }
 
   isList() {
-    return this.values && this.values.length > 0;
+    return !this.isValue();
   }
 
   getValueToPrint() {
@@ -68,48 +68,47 @@ class Packet {
     if (left.isList() && right.isValue()) {
       console.log(tab + "Different types. Converting right to [" + right.value + "]");
       right.convert();
-      console.log(tab + "Comparing " + left.getValueToPrint() + " vs " + right.getValueToPrint());
-
-      // Retry here?
-      //left.compareWith(right, tab + "...");
     } else if (left.isValue() && right.isList()) {
       console.log(tab + "Different types. Converting left");
       left.convert();
-      console.log(tab + "Comparing " + left.getValueToPrint() + " vs " + right.getValueToPrint());
-      // Retry here?
-
-      //left.compareWith(right, tab + "...");
     }
 
     if (left.isValue() && right.isValue()) {
-      //console.log(tab + "Both are pure values (left, right)", left.value, right.value);
       /* If the left integer is higher than the right integer, the inputs are not in the right order */
       if (left.value > right.value) {
-        console.log(tab + "left value is greater than right right, return false");
-        return false; // Break recursion
+        return false;
+      }
+      if (left.value < right.value) {
+        return true;
+      } else {
+        return "continue";
       }
     } else if (left.isList() && right.isList()) {
       const max = Math.max(right.values.length, left.values.length);
       for (let i = 0; i < max; i++) {
         if (!left.values[i]) {
-          console.log(tab + "LEFT side ran out");
+          console.log(tab + "Left ran out");
           return true;
         }
         if (!right.values[i]) {
-          console.log(tab + "RIGHT side ran out");
+          console.log(tab + "Right ran out");
           return false;
         }
         const r = left.values[i].compareWith(right.values[i], tab + " ");
-        if (!r) {
-          return false;
+
+        if (r === "continue") {
+          continue;
         }
+        return r;
       }
-      return true;
+      return "continue";
     } else {
       console.log("ERR: invalid comparison");
+      console.log("left.isList:", left.isList());
+      console.log("right.isList:", right.isList());
     }
 
-    return true;
+    return "continue";
   }
 
   print(tab) {
@@ -129,7 +128,7 @@ class Packet {
 
   _getLine() {
     if (!(this.values && this.values.length > 0)) {
-      return this.value;
+      return this.value !== null ? this.value : "";
     } else {
       let subPackets = "[";
       this.values.forEach((v) => {
@@ -182,13 +181,19 @@ for (let i = 0; i < rows.length - 1; i++) {
 //packets[packets.length - 1].p1.printLine();
 //packets[0].p2.print();
 
-let indiciesSum = 0;
+let indicies = [];
 packets.forEach((pp, i) => {
   console.log("");
   const inOrder = pp.areInOrder();
   console.log("PACKET PAIR " + (i + 1), inOrder);
-  indiciesSum += inOrder ? i + 1 : 0;
+  if (inOrder) {
+    indicies.push(i + 1);
+  }
   console.log("");
 });
 
-console.log("Part 1:", indiciesSum);
+console.log(indicies);
+console.log(
+  "Part 1:",
+  indicies.reduce((a, b) => a + b, 0)
+);
