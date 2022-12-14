@@ -16,8 +16,9 @@ let realHeight = 0;
 
 const PART = 2;
 
-let expandX = 500;
-const SIZE = 2; // In pixels
+let expandLeft = 80;
+let expandRight = 160;
+const SIZE = 7; // In pixels
 const parse = () => {
   input.forEach((r) => {
     const coords = r.split("->").map((c) => c.trim());
@@ -88,19 +89,18 @@ const normalizeLines = () => {
 };
 
 const setSandStart = () => {
-  sandStart = { y: 0, x: 500 - minX + expandX / 2 };
+  sandStart = { y: 0, x: 500 - minX + expandLeft };
   matrix[sandStart.y][sandStart.x] = "+";
 };
 
 const expandMatrix = () => {
-  let halfExpand = Math.floor(expandX / 2);
   for (let y = 0; y < maxY + 1; y++) {
     let r = matrix[y];
-    for (let a = 0; a < halfExpand; a++) {
+    for (let a = 0; a < expandLeft; a++) {
       r.unshift(".");
     }
 
-    for (let a = 0; a < halfExpand; a++) {
+    for (let a = 0; a < expandRight; a++) {
       r.push(".");
     }
   }
@@ -126,30 +126,31 @@ const simulateSand = () => {
   let tab = "";
   do {
     if (matrix[sandY + 1] && matrix[sandY + 1][sandX] && matrix[sandY + 1][sandX] === ".") {
-      //console.log(tab + "Can move down");
+      fill(20);
+      ellipse(sandX * SIZE, sandY * SIZE, SIZE, SIZE);
       sandY++;
-    } else if ((matrix[sandY + 1] && matrix[sandY + 1][sandX] && matrix[sandY + 1][sandX] === "#") || (matrix[sandY + 1] && matrix[sandY + 1][sandX] && matrix[sandY + 1][sandX] === "o")) {
-      //console.log(tab + "Cannot move DOWN (blocked)");
-
-      // Check diagnal down LEFT
-      if (matrix[sandY + 1] && matrix[sandY + 1][sandX - 1] && matrix[sandY + 1][sandX - 1] === "." /*&& matrix[sandY][sandX - 1] !== "#" && matrix[sandY][sandX - 1] !== "o"*/) {
-        //console.log(tab + "Dropping LEFT to", sandY + 1, sandX - 1);
+      fill(255, 20, 20);
+      ellipse(sandX * SIZE, sandY * SIZE, SIZE, SIZE);
+    } else if (matrix[sandY + 1] && matrix[sandY + 1][sandX] && matrix[sandY + 1][sandX] !== ".") {
+      if (matrix[sandY + 1] && matrix[sandY + 1][sandX - 1] && matrix[sandY + 1][sandX - 1] === ".") {
+        fill(20);
+        ellipse(sandX * SIZE, sandY * SIZE, SIZE, SIZE);
         sandY++;
         sandX--;
+        fill(255, 20, 20);
+        ellipse(sandX * SIZE, sandY * SIZE, SIZE, SIZE);
       } else if (sandX - 1 < 0) {
-        //console.log(tab + "OUT OF BOUNDS (left)");
         return false;
-      }
-      // Check right
-      else if (matrix[sandY + 1] && matrix[sandY + 1][sandX + 1] && matrix[sandY + 1][sandX + 1] === "." /* && matrix[sandY][sandX + 1] !== "#" && matrix[sandY][sandX + 1] !== "o"*/) {
-        //console.log(tab + "Dropping RIGHT");
+      } else if (matrix[sandY + 1] && matrix[sandY + 1][sandX + 1] && matrix[sandY + 1][sandX + 1] === ".") {
+        fill(20);
+        ellipse(sandX * SIZE, sandY * SIZE, SIZE, SIZE);
         sandY++;
         sandX++;
+        fill(255, 20, 20);
+        ellipse(sandX * SIZE, sandY * SIZE, SIZE, SIZE);
       } else if (sandX + 1 > matrix[0].length - 1) {
-        //console.log(tab + "OUT OF BOUNDS (right)");
         return false;
       } else {
-        //console.log(tab + "Cannot move at all");
         if (sandX === sandStart.x && sandY === sandStart.y && PART === 2) {
           return false;
         }
@@ -157,11 +158,51 @@ const simulateSand = () => {
         break;
       }
     } else {
-      console.log(tab + "Out of bounds!");
       return false;
     }
     tab += " ";
   } while (true);
+
+  return { x: sandX, y: sandY };
+};
+
+const simulateGrain = () => {
+  stroke(25);
+  if (matrix[sandY + 1] && matrix[sandY + 1][sandX] && matrix[sandY + 1][sandX] === ".") {
+    fill(55);
+    ellipse(sandX * SIZE, sandY * SIZE, SIZE, SIZE);
+    sandY++;
+    fill(10, 200, 20);
+    ellipse(sandX * SIZE, sandY * SIZE, SIZE, SIZE);
+  } else if (matrix[sandY + 1] && matrix[sandY + 1][sandX] && matrix[sandY + 1][sandX] !== ".") {
+    if (matrix[sandY + 1] && matrix[sandY + 1][sandX - 1] && matrix[sandY + 1][sandX - 1] === ".") {
+      fill(55);
+      ellipse(sandX * SIZE, sandY * SIZE, SIZE, SIZE);
+      sandY++;
+      sandX--;
+      fill(10, 200, 20);
+      ellipse(sandX * SIZE, sandY * SIZE, SIZE, SIZE);
+    } else if (sandX - 1 < 0) {
+      return false;
+    } else if (matrix[sandY + 1] && matrix[sandY + 1][sandX + 1] && matrix[sandY + 1][sandX + 1] === ".") {
+      fill(55);
+      ellipse(sandX * SIZE, sandY * SIZE, SIZE, SIZE);
+      sandY++;
+      sandX++;
+      fill(10, 200, 20);
+      ellipse(sandX * SIZE, sandY * SIZE, SIZE, SIZE);
+    } else if (sandX + 1 > matrix[0].length - 1) {
+      return false;
+    } else {
+      if (sandX === sandStart.x && sandY === sandStart.y && PART === 2) {
+        return false;
+      }
+      matrix[sandY][sandX] = "o";
+      return false;
+    }
+  } else {
+    return false;
+  }
 
   return true;
 };
@@ -181,10 +222,11 @@ function setup() {
   // Rendering
   noLoop();
   ellipseMode(CORNER);
-  frameRate(1);
   createCanvas(matrix[0].length * SIZE, matrix.length * SIZE);
-  background(50);
+  background(25);
   noStroke();
+
+  renderMatrix();
 }
 
 const renderMatrix = () => {
@@ -195,13 +237,9 @@ const renderMatrix = () => {
       let cell = matrix[y][x];
       if (cell === "#") {
         fill(75);
-        /*} else if (cell === ".") {
-        fill(255); */
       } else if (cell === "+") {
-        // Moving
         fill(224, 217, 0);
       } else if (cell === "o") {
-        // Settled
         fill(252, 127, 3);
       }
       if (cell === "#" || cell === ".") {
@@ -215,23 +253,45 @@ const renderMatrix = () => {
 
 let runs = 0;
 let speed = 0;
+let simulatingGrain = false;
+let sandY;
+let sandX;
 function draw() {
-  for (let i = 0; i < speed; i++) {
-    if (!simulateSand()) {
-      noLoop();
-      if (PART === 1) console.log("Part 1:", runs);
-      else console.log("Part 2:", runs + 1);
-      break;
-    }
-    runs++;
-    console.log(runs);
+  if (!simulatingGrain) {
+    simulatingGrain = true;
+    sandX = sandStart.x;
+    sandY = sandStart.y;
   }
-  renderMatrix();
+
+  if (simulatingGrain) {
+    for (let i = 0; i < 2; i++) {
+      let result = simulateGrain();
+      if (result === false) {
+        simulatingGrain = false;
+        fill(252, 127, 3);
+        ellipse(sandX * SIZE, sandY * SIZE, SIZE, SIZE);
+        runs++;
+      }
+    }
+  }
+
+  /*const grain = simulateSand();
+  if (!grain) {
+    noLoop();
+    if (PART === 1) console.log("Part 1:", runs);
+    else console.log("Part 2:", runs + 1);
+  } else {
+    fill(252, 127, 3);
+    ellipse(grain.x * SIZE, grain.y * SIZE, SIZE, SIZE);
+  }
+  runs++; */
+
+  //renderMatrix();
 }
 
 function keyPressed() {
   if (keyCode === ENTER) {
-    speed = 1000;
+    speed = 2;
     loop();
   }
 }
