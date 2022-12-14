@@ -6,11 +6,18 @@ const input = data;
 
 const lines = [];
 const matrix = [];
+let sandStart = null;
 let maxX = 0;
 let maxY = 0;
 let minX = 999999999;
 let minY = 999999999;
-const SIZE = 10; // In pixels
+let realWidth = 0;
+let realHeight = 0;
+
+const PART = 2;
+
+let expandX = 500;
+const SIZE = 2; // In pixels
 const parse = () => {
   input.forEach((r) => {
     const coords = r.split("->").map((c) => c.trim());
@@ -49,13 +56,13 @@ const createMatrix = () => {
 const fillInLine = (c1, c2) => {
   if (c1.x === c2.x) {
     let x = c1.x;
-    for (let y = Math.min(c1.y, c2.y); y < Math.max(c1.y, c2.y); y++) {
+    for (let y = Math.min(c1.y, c2.y); y < Math.max(c1.y, c2.y) + 1; y++) {
       matrix[y][x] = "#";
     }
   }
   if (c1.y === c2.y) {
     let y = c1.y;
-    for (let x = Math.min(c1.x, c2.x); x < Math.max(c1.x, c2.x); x++) {
+    for (let x = Math.min(c1.x, c2.x); x < Math.max(c1.x, c2.x) + 1; x++) {
       matrix[y][x] = "#";
     }
   }
@@ -67,6 +74,9 @@ const setupMatrix = () => {
       fillInLine(line[i], line[i + 1]);
     }
   });
+
+  realHeight = maxY + 1;
+  realWidth = maxX - minX + 1;
 };
 
 const normalizeLines = () => {
@@ -77,6 +87,86 @@ const normalizeLines = () => {
   });
 };
 
+const setSandStart = () => {
+  sandStart = { y: 0, x: 500 - minX + expandX / 2 };
+  matrix[sandStart.y][sandStart.x] = "+";
+};
+
+const expandMatrix = () => {
+  let halfExpand = Math.floor(expandX / 2);
+  for (let y = 0; y < maxY + 1; y++) {
+    let r = matrix[y];
+    for (let a = 0; a < halfExpand; a++) {
+      r.unshift(".");
+    }
+
+    for (let a = 0; a < halfExpand; a++) {
+      r.push(".");
+    }
+  }
+  realWidth = matrix[0].length;
+  let arr = [];
+  for (let a = 0; a < realWidth; a++) {
+    arr.push(".");
+  }
+  matrix.push(arr);
+
+  let floor = [];
+  for (let a = 0; a < realWidth; a++) {
+    floor.push("#");
+  }
+  matrix.push(floor);
+
+  realHeight = matrix.length;
+};
+
+const simulateSand = () => {
+  let sandX = sandStart.x;
+  let sandY = sandStart.y;
+  let tab = "";
+  do {
+    if (matrix[sandY + 1] && matrix[sandY + 1][sandX] && matrix[sandY + 1][sandX] === ".") {
+      //console.log(tab + "Can move down");
+      sandY++;
+    } else if ((matrix[sandY + 1] && matrix[sandY + 1][sandX] && matrix[sandY + 1][sandX] === "#") || (matrix[sandY + 1] && matrix[sandY + 1][sandX] && matrix[sandY + 1][sandX] === "o")) {
+      //console.log(tab + "Cannot move DOWN (blocked)");
+
+      // Check diagnal down LEFT
+      if (matrix[sandY + 1] && matrix[sandY + 1][sandX - 1] && matrix[sandY + 1][sandX - 1] === "." /*&& matrix[sandY][sandX - 1] !== "#" && matrix[sandY][sandX - 1] !== "o"*/) {
+        //console.log(tab + "Dropping LEFT to", sandY + 1, sandX - 1);
+        sandY++;
+        sandX--;
+      } else if (sandX - 1 < 0) {
+        //console.log(tab + "OUT OF BOUNDS (left)");
+        return false;
+      }
+      // Check right
+      else if (matrix[sandY + 1] && matrix[sandY + 1][sandX + 1] && matrix[sandY + 1][sandX + 1] === "." /* && matrix[sandY][sandX + 1] !== "#" && matrix[sandY][sandX + 1] !== "o"*/) {
+        //console.log(tab + "Dropping RIGHT");
+        sandY++;
+        sandX++;
+      } else if (sandX + 1 > matrix[0].length - 1) {
+        //console.log(tab + "OUT OF BOUNDS (right)");
+        return false;
+      } else {
+        //console.log(tab + "Cannot move at all");
+        if (sandX === sandStart.x && sandY === sandStart.y && PART === 2) {
+          return false;
+        }
+        matrix[sandY][sandX] = "o";
+        break;
+      }
+    } else {
+      console.log(tab + "Out of bounds!");
+      return false;
+    }
+    tab += " ";
+  } while (true);
+
+  return true;
+};
+
+const RUNS = 5;
 function setup() {
   // Logic
   parse();
@@ -84,25 +174,64 @@ function setup() {
   createMatrix();
   setupMatrix();
 
+  // PART 2
+  if (PART === 2) expandMatrix();
+  setSandStart();
+
   // Rendering
+  noLoop();
+  ellipseMode(CORNER);
+  frameRate(1);
   createCanvas(matrix[0].length * SIZE, matrix.length * SIZE);
   background(50);
   noStroke();
 }
 
 const renderMatrix = () => {
-  for (let y = 0; y < maxY + 1; y++) {
-    for (let x = 0; x < maxX - minX + 1; x++) {
-      if (matrix[y][x] === "#") {
-        fill(0);
-      } else if (matrix[y][x] === ".") {
-        fill(255);
-      }
+  for (let y = 0; y < realHeight; y++) {
+    for (let x = 0; x < realWidth; x++) {
+      fill(25);
       rect(x * SIZE, y * SIZE, SIZE, SIZE);
+      let cell = matrix[y][x];
+      if (cell === "#") {
+        fill(75);
+        /*} else if (cell === ".") {
+        fill(255); */
+      } else if (cell === "+") {
+        // Moving
+        fill(224, 217, 0);
+      } else if (cell === "o") {
+        // Settled
+        fill(252, 127, 3);
+      }
+      if (cell === "#" || cell === ".") {
+        rect(x * SIZE, y * SIZE, SIZE, SIZE);
+      } else {
+        ellipse(x * SIZE, y * SIZE, SIZE, SIZE);
+      }
     }
   }
 };
 
+let runs = 0;
+let speed = 0;
 function draw() {
+  for (let i = 0; i < speed; i++) {
+    if (!simulateSand()) {
+      noLoop();
+      if (PART === 1) console.log("Part 1:", runs);
+      else console.log("Part 2:", runs + 1);
+      break;
+    }
+    runs++;
+    console.log(runs);
+  }
   renderMatrix();
+}
+
+function keyPressed() {
+  if (keyCode === ENTER) {
+    speed = 1000;
+    loop();
+  }
 }
